@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Церква РТБ — маршрутки</title>
+<style>
+  :root{
+    --navy:#12213a;
+    --navy-deep:#0a1526;
+    --amber:#f2a93b;
+    --amber-dim:#c98a2c;
+    --paper:#eef1f5;
+    --line-38:#5b9bd5;
+    --line-39:#e0654f;
+    --muted:#8d9bb5;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--navy-deep);
+    color:var(--paper);
+    font-family: 'Courier New', ui-monospace, SFMono-Regular, Menlo, monospace;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 40px;
+  }
+  .board{
+    width:100%;
+    max-width:460px;
+  }
+  .stop-label{
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size:13px;
+    letter-spacing:0.02em;
+    color:var(--muted);
+    margin:0 0 2px;
+  }
+  .stop-name{
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size:30px;
+    font-weight:600;
+    color:var(--paper);
+    margin:0 0 18px;
+    line-height:1.15;
+  }
+  .clock{
+    font-size:15px;
+    color:var(--amber);
+    margin-bottom:22px;
+    letter-spacing:0.03em;
+  }
+  .clock span{ color:var(--muted); font-size:13px; margin-left:8px;}
+
+  .next-card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+    border:1px solid rgba(255,255,255,0.12);
+    border-left:4px solid var(--amber);
+    border-radius:6px;
+    padding:20px 20px 18px;
+    margin-bottom:22px;
+  }
+  .next-card .eyebrow{
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:8px;
+  }
+  .next-card .route-tag{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:34px;height:34px;
+    border-radius:4px;
+    font-size:16px;
+    font-weight:700;
+    color:var(--navy-deep);
+    margin-right:12px;
+    vertical-align:middle;
+  }
+  .next-card .big{
+    font-size:44px;
+    font-weight:700;
+    color:var(--paper);
+    vertical-align:middle;
+  }
+  .next-card .sub{
+    margin-top:6px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .route-block{
+    margin-bottom:16px;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .route-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 14px;
+    background:rgba(255,255,255,0.03);
+  }
+  .route-tag-sm{
+    width:26px;height:26px;
+    border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;
+    color:var(--navy-deep);
+  }
+  .route-head .name{
+    font-size:13px;
+    color:var(--paper);
+  }
+  .times-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 8px;
+    padding:12px 14px 14px;
+  }
+  .t{
+    font-size:14px;
+    padding:3px 7px;
+    border-radius:3px;
+    color:var(--muted);
+    background:rgba(255,255,255,0.03);
+  }
+  .t.passed{ opacity:0.28; text-decoration:line-through; }
+  .t.next{
+    color:var(--navy-deep);
+    background:var(--amber);
+    font-weight:700;
+  }
+
+  .daytype{
+    margin-top:26px;
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.6;
+  }
+  .footer-note{
+    margin-top:6px;
+    font-size:11px;
+    color:#4b5875;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="board">
+  <p class="stop-label">зупинка</p>
+  <h1 class="stop-name">Церква РТБ</h1>
+  <div class="clock" id="clock">--:--:-- <span id="daylabel"></span></div>
+
+  <div class="next-card" id="nextCard">
+    <div class="eyebrow">найближча маршрутка</div>
+    <div>
+      <span class="route-tag" id="nextTag">--</span>
+      <span class="big" id="nextTime">--:--</span>
+    </div>
+    <div class="sub" id="nextSub">рахуємо…</div>
+  </div>
+
+  <div class="route-block">
+    <div class="route-head">
+      <span class="route-tag-sm" style="background:var(--line-38)">38</span>
+      <span class="name">Центр — вул. Київська — вул. Л. Українки</span>
+    </div>
+    <div class="times-row" id="times38"></div>
+  </div>
+
+  <div class="route-block">
+    <div class="route-head">
+      <span class="route-tag-sm" style="background:var(--line-39)">39</span>
+      <span class="name">Мікрорайон Північний — Ринок</span>
+    </div>
+    <div class="times-row" id="times39"></div>
+  </div>
+
+  <p class="daytype" id="daytypeNote"></p>
+  <p class="footer-note">розклад станом на травень–листопад 2025–2026</p>
+</div>
+
+<script>
+// Часи прибуття на зупинку "Церква РТБ / Церква РПБ" (хв від півночі зберігаємо як "H:MM")
+const data = {
+  38: {
+    workday: [
+      "7:09","7:27","7:44","8:04","8:22","8:39","8:59","9:17","9:34","9:54",
+      "10:12","10:29","10:49","11:07","11:24","11:44","12:02","12:19","12:39","12:57",
+      "13:14","13:34","13:52","14:09","14:29","14:47","15:04","15:24","15:42","15:59",
+      "16:19","16:37","16:54","17:14","17:32","17:49","18:09","18:27","18:44","19:04",
+      "19:22","19:39"
+    ],
+    weekend: [
+      "7:09","7:27","8:04","8:22","8:59","9:17","9:54","10:12","10:49","11:07",
+      "11:44","12:02","12:39","12:57","13:34","13:52","14:29","14:47","15:24","15:42",
+      "16:19","16:37","17:14","17:32","18:09","18:27","19:04","19:22"
+    ]
+  },
+  39: {
+    workday: [
+      "6:37","6:51","7:05","7:19","7:33","7:47","8:01","8:15","8:29","8:44",
+      "8:59","9:14","9:29","9:44","9:59","10:14","10:29","10:44","10:59","11:14",
+      "11:29","11:44","11:59","12:14","12:29","12:44","12:59","13:14","13:29","13:44",
+      "13:59","14:14","14:29","14:44","14:59","15:14","15:29","15:44","15:59","16:14",
+      "16:29","16:44","16:59","17:14","17:29","17:44","17:59","18:14","18:29","18:44",
+      "18:58","19:12","19:27","19:37","19:49","20:03","20:18","20:28","20:40","20:54"
+    ],
+    weekend: [
+      "6:37","6:51","7:05","7:19","7:33","7:47","8:01","8:15","8:29","8:43",
+      "8:57","9:11","9:25","9:39","9:53","10:07","10:21","10:35","10:49","11:03",
+      "11:17","11:31","11:45","11:59","12:13","12:27","12:41","12:55","13:09","13:23",
+      "13:37","13:51","14:05","14:19","14:33","14:47","15:01","15:15","15:29","15:43",
+      "15:57","16:11","16:25","16:39","16:53","17:07","17:21","17:35","17:49","18:03",
+      "18:17","18:31","18:45","18:59","19:13","19:27","19:34","19:48","20:02","20:16"
+    ]
+  }
+};
+
+const routeColor = {38:"#5b9bd5", 39:"#e0654f"};
+
+function isWeekend(d){
+  const day = d.getDay(); // 0 sun, 6 sat
+  return day === 0 || day === 6;
+}
+
+function toMinutes(hm){
+  const [h,m] = hm.split(":").map(Number);
+  return h*60+m;
+}
+
+function fmtWait(mins){
+  if(mins < 1) return "прибуває зараз";
+  if(mins === 1) return "через 1 хв";
+  if(mins < 5) return `через ${mins} хв`;
+  return `через ${mins} хв`;
+}
+
+function render(){
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const weekend = isWeekend(now);
+  const dayKey = weekend ? "weekend" : "workday";
+
+  document.getElementById("clock").innerHTML =
+    now.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) +
+    ` <span>${weekend ? "вихідний" : "робочий день"}</span>`;
+
+  document.getElementById("daytypeNote").textContent =
+    weekend
+      ? "Показано вихідний розклад. Маршрут №38 у вихідні їде лише за графіками 1 і 3."
+      : "Показано робочий розклад.";
+
+  let best = null; // {route, time, mins}
+
+  [38,39].forEach(route=>{
+    const times = data[route][dayKey];
+    const container = document.getElementById("times"+route);
+    container.innerHTML = "";
+
+    let nextForRoute = null;
+
+    times.forEach(t=>{
+      const mins = toMinutes(t);
+      const diff = mins - nowMin;
+      const el = document.createElement("span");
+      el.className = "t";
+      el.textContent = t;
+
+      if(diff < 0){
+        el.classList.add("passed");
+      } else if(nextForRoute === null){
+        nextForRoute = {time:t, diff};
+        el.classList.add("next");
+      }
+      container.appendChild(el);
+    });
+
+    if(nextForRoute && (best === null || nextForRoute.diff < best.diff)){
+      best = {route, time:nextForRoute.time, diff:nextForRoute.diff};
+    }
+  });
+
+  const tag = document.getElementById("nextTag");
+  const timeEl = document.getElementById("nextTime");
+  const sub = document.getElementById("nextSub");
+
+  if(best){
+    tag.textContent = best.route;
+    tag.style.background = routeColor[best.route];
+    timeEl.textContent = best.time;
+    sub.textContent = `маршрутка №${best.route} — ${fmtWait(best.diff)}`;
+  } else {
+    tag.textContent = "—";
+    tag.style.background = "#3a4863";
+    timeEl.textContent = "—:—";
+    sub.textContent = "на сьогодні рейсів більше немає";
+  }
+}
+
+render();
+setInterval(render, 15000);
+</script>
+</body>
+</html>
